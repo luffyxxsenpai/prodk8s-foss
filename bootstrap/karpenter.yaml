@@ -1,0 +1,40 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: oci://public.ecr.aws/karpenter
+    chart: karpenter
+    targetRevision: v0.37.0
+    helm:
+      values: |
+        settings:
+          clusterName: prod-proj-fin
+          interruptionQueue: Karpenter-prod-proj-fin
+
+        serviceAccount:
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::537124957197:role/KarpenterControllerRole-prod-proj-fin 
+
+        controller:
+          tolerations:
+            - key: "CriticalAddonsOnly"
+              operator: "Exists"
+              effect: "NoSchedule"
+          nodeSelector:
+            role: system
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: karpenter
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
