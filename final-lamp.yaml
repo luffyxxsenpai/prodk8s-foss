@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: headlamp
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
 
@@ -20,7 +22,7 @@ spec:
             service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
 
         serviceAccount:
-          create: false 
+          create: true
           name: headlamp-admin
 
   destination:
@@ -33,43 +35,29 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ApplyOutOfSyncOnly=true
-    retry:
-      limit: 5
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
 ---
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
 metadata:
-  name: headlamp-rbac
-  namespace: argocd
-spec:
-  project: default
-
-  source:
-    repoURL: https://github.com/luffyxxsenpai/prodk8s-foss
-    targetRevision: main
-    path: apps/headlamp
-
-  destination:
-    server: https://kubernetes.default.svc
+  name: headlamp-admin
+subjects:
+  - kind: ServiceAccount
+    name: headlamp-admin
     namespace: headlamp
-
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
 ---
+# metrics-server (unchanged)
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: metrics-server
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
 
