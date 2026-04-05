@@ -1,0 +1,57 @@
+
+# Cluster — the actual PostgreSQL instance
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: app-db
+  namespace: default
+spec:
+  instances: 2                 
+
+  postgresql:
+    pg_hba:
+      - host all all 0.0.0.0/0 md5
+
+  bootstrap:
+    initdb:
+      database: appdb           
+      owner: appuser            
+      secret:
+        name: app-db-credentials
+
+  storage:
+    size: 10Gi
+
+  # # Backup to S3 — required for point-in-time recovery
+  # # Comment out if you don't have an S3 bucket yet
+  # backup:
+  #   barmanObjectStore:
+  #     destinationPath: s3://your-bucket-name/cnpg/app-db
+  #     s3Credentials:
+  #       accessKeyId:
+  #         name: s3-creds
+  #         key: ACCESS_KEY_ID
+  #       secretAccessKey:
+  #         name: s3-creds
+  #         key: ACCESS_SECRET_KEY
+  #     wal:
+  #       compression: gzip
+---
+# Pooler — PgBouncer connection pooling in front of the cluster
+# Your app connects to this, not directly to the cluster
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: app-db-pooler
+  namespace: default
+spec:
+  cluster:
+    name: app-db
+  instances: 2
+  type: rw                      # routes to primary only (read-write)
+  pgbouncer:
+    poolMode: transaction        # transaction pooling — most efficient
+    parameters:
+      max_client_conn: "200"
+      default_pool_size: "20"
+---

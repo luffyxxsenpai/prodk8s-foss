@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: todo-app
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`todo.aws.homelain.click`)  
+      services:
+        - name: todo-app
+          port: 8080
+  tls: {}
