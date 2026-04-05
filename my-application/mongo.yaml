@@ -17,7 +17,7 @@ metadata:
   name: mongo
 spec:
   serviceName: mongo-service
-  replicas: 1   # ⚠️ start with 1 (Mongo replica set not configured)
+  replicas: 1   
   selector:
     matchLabels:
       app: mongo
