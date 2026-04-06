@@ -1,0 +1,109 @@
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: headlamp
+  namespace: headlamp
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`headlamp.aws.homelain.click`)
+      kind: Rule
+      services:
+        - name: headlamp
+          port: 80
+  tls: {}
+    
+---
+
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kubecost
+  namespace: kubecost
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`kubecost.aws.homelain.click`)
+      kind: Rule
+      services:
+        - name: kubecost-frontend
+          port: 9090
+  tls: {} 
+
+---
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`prometheus.aws.homelain.click`)
+      kind: Rule
+      services:
+        - name: kube-prometheus-stack-prometheus
+          port: 9090
+  tls: {}
+
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`grafana.aws.homelain.click`)
+      kind: Rule
+      services:
+        - name: kube-prometheus-stack-grafana
+          port: 80
+  tls: {}
+
+
+---
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: otel-demo
+  namespace: otel-demo
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`shop.aws.homelain.click`)
+      kind: Rule
+      services:
+        - name: frontend-proxy
+          port: 8080
+  tls: {}
+
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jaeger
+  namespace: otel-demo
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`jaeger.aws.homelain.click`)
+      kind: Rule
+      services:
+        - name: jaeger
+          port: 16686
+  tls: {}

@@ -1,0 +1,81 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: traefik
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://traefik.github.io/charts
+    chart: traefik
+    targetRevision: 39.0.0
+    helm:
+      values: |
+        ingressRoute:
+          dashboard:
+            enabled: false
+
+        ports:
+          web:
+            port: 8000
+            exposedPort: 80
+            protocol: TCP
+            http:
+              redirections:
+                entryPoint:
+                  to: websecure
+                  scheme: https
+                  permanent: true
+          websecure:
+            port: 8443
+            exposedPort: 443
+            protocol: TCP
+
+        service:
+          type: LoadBalancer
+          annotations:
+            service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+            service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 256Mi
+
+        rbac:
+          enabled: true
+          namespaced: false
+
+        providers:
+          kubernetesCRD:
+            enabled: true
+            allowCrossNamespace: true
+          kubernetesIngress:
+            enabled: true
+
+        logs:
+          access:
+            enabled: true
+
+        deployment:
+          podAnnotations:
+            prometheus.io/scrape: "true"
+            prometheus.io/port: "8082"
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: traefik
+
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+    automated:
+      prune: true
+      selfHeal: true
+
+
