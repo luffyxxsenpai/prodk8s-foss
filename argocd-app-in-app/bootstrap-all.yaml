@@ -1,16 +1,45 @@
 # Bootstrap — apply this once:
 #   kubectl apply -f bootstrap-all.yaml
-
+#
 # Sync wave order:
-#   wave -3 : cert-manager CRDs
-#   wave -2 : cert-manager, sealed-secrets
+#   wave -5 : karpenter config (NodePool + EC2NodeClass) — nodes must exist first
+#   wave -4 : cert-manager CRDs
+#   wave -3 : cert-manager, sealed-secrets
+#   wave -2 : cloudflare secret
 #   wave -1 : ClusterIssuer + wildcard cert, traefik, cloudnative-pg
-#   wave  0 : all other apps (prometheus, headlamp, kubecost, otel-demo etc)
-#   wave  1 : ingress routes (need traefik + apps to exist first)
+#   wave  0 : all platform apps
+#   wave  1 : ingress routes
 
 ############################
-# wave -3: cert-manager CRDs
-# Must be first — everything TLS-related depends on these CRDs
+# wave -5: Karpenter NodePool + EC2NodeClass
+# Must be first — provisions the EC2 nodes everything else runs on
+############################
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: karpenter-config
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+  annotations:
+    argocd.argoproj.io/sync-wave: "-5"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/luffyxxsenpai/prodk8s-foss
+    targetRevision: main
+    path: karpenter-manifest
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+---
+############################
+# wave -4: cert-manager CRDs
 ############################
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -39,9 +68,7 @@ spec:
 
 ---
 ############################
-# wave -2: cert-manager + sealed-secrets
-# cert-manager controller needs its CRDs from wave -3
-# sealed-secrets has no dependencies
+# wave -3: cert-manager + sealed-secrets
 ############################
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -100,9 +127,9 @@ spec:
       selfHeal: true
 
 ---
----
 ############################
-# cloudflare api token
+# wave -2: cloudflare secret
+# sealed-secrets controller must be running to decrypt this
 ############################
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -118,7 +145,7 @@ spec:
   source:
     repoURL: https://github.com/luffyxxsenpai/prodk8s-foss
     targetRevision: main
-    path: apps/secret
+    path: apps/secrets
   destination:
     server: https://kubernetes.default.svc
     namespace: cert-manager
@@ -128,12 +155,10 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+
 ---
 ############################
 # wave -1: ClusterIssuer, wildcard cert, Traefik, CloudNativePG
-# ClusterIssuer needs cert-manager running from wave -2
-# Traefik needs cert-manager CRDs for TLSStore
-# CloudNativePG has no dependency but needed early for DB
 ############################
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -281,7 +306,6 @@ spec:
 ---
 ############################
 # wave 0: all platform apps
-# Traefik is up, certs exist, DB operator running
 ############################
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -342,13 +366,10 @@ spec:
 
         alertmanager:
           enabled: true
-
         nodeExporter:
           enabled: true
-
         kubeStateMetrics:
           enabled: true
-
         prometheusOperator:
           enabled: true
   destination:
@@ -511,7 +532,6 @@ spec:
 ---
 ############################
 # wave 1: IngressRoutes
-# Traefik must be running and apps must exist before routes work
 ############################
 apiVersion: argoproj.io/v1alpha1
 kind: Application
