@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: otel-demo
+  namespace: otel-demo
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`shop.aws.homelain.click`)
+      kind: Rule
+      services:
+        - name: frontend-proxy
+          port: 8080
+  tls: {}

@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jaeger
+  namespace: otel-demo
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`jaeger.aws.homelain.click`)
+      kind: Rule
+      services:
+        - name: jaeger
+          port: 16686
+  tls: {}

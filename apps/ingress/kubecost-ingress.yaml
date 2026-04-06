@@ -1,0 +1,16 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kubecost
+  namespace: kubecost
+spec:
+  entryPoints:
+    - web
+    - websecure
+  routes:
+    - match: Host(`kubecost.aws.homelain.click`)
+      kind: Rule
+      services:
+        - name: kubecost-frontend
+          port: 9090
+  tls: {} 
