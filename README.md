@@ -1,4 +1,4 @@
-# prodk8s-foss — Production Kubernetes Platform on AWS EKS
+# Production Kubernetes Platform on AWS EKS
 
 A production-grade Kubernetes platform built entirely with open-source tooling. Terraform provisions the AWS infrastructure, ArgoCD manages everything inside the cluster declaratively from this Git repository. No manual Helm installs, no manual kubectl applies after bootstrap.
 
