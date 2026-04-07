@@ -23,7 +23,7 @@ A production-grade Kubernetes platform built entirely with open-source tooling. 
 ![img](pics/kubecost-1png)
 
 **argocd dashboard**
-![img](pics/argocd)
+![img](pics/argocd.png)
 
 **grafana dashboard**
 ![img](pics/grafana.png)
