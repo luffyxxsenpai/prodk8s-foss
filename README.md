@@ -20,7 +20,7 @@ A production-grade Kubernetes platform built entirely with open-source tooling. 
 ---
 **kubecost  dashboard**
 ![img](pics/kubecost-2.png)
-![img](pics/kubecost-1png)
+![img](pics/kubecost-1.png)
 
 **argocd dashboard**
 ![img](pics/argocd.png)
@@ -29,7 +29,7 @@ A production-grade Kubernetes platform built entirely with open-source tooling. 
 ![img](pics/grafana.png)
 
 **jaeger dashboard**
-![img](jaeger.png)
+![img](pics/jaeger.png)
 
 
 ## What Terraform Creates
